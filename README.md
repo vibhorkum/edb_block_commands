@@ -24,6 +24,10 @@ This extension comes with following GUC for whitelist:
 If user wants to allow specific commands for super user then he/she can list the name of super user in above mentioned GUC.
 Names listed in su_whitelist will allow super user to execute any commands.
 
+This extension also comes with following functions to switch to super user:
+1. edb_switch_user(TEXT): Switch the role of a super user to specific super user or whitelist user.
+2. edb_switch_user_u(TEXT): Switch the role of normal user to specific superuser.
+
 ## Installation
 
 1. Clone the repository using following command:
