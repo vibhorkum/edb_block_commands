@@ -619,74 +619,74 @@ _PG_init(void)
 
 	DefineCustomStringVariable("edb_block_commands.su_whitelist",
 							 "Allows a list of users to use edb_block_commands for superuser escalation",
-							 NULL, &su_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_alter_system_whitelist",
 							 "Allows a list of super users to execute ALTER SYSTEM",
-							 NULL, &su_alter_system_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_alter_system_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_copy_command_whitelist",
 							 "Allows a list of super users to execute COPY command",
-							 NULL, &su_copy_command_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_copy_command_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_copy_program_whitelist",
 							 "Allows a list of super users to execute COPY command",
-							 NULL, &su_copy_program_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_copy_program_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_log_statement_whitelist",
 							 "Allows a list of super users to execute \"SET log_statement\" command",
-							 NULL, &su_log_statement_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_log_statement_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_show_command_whitelist",
 							 "Allows a list of super users to execute SHOW command",
-							 NULL, &su_show_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_show_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_set_command_whitelist",
 							 "Allows a list of super users to execute \"SET variable\" command",
-							 NULL, &su_set_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_set_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_vacuum_analyze_command_whitelist",
 							 "Allows a list of super users to execute \"VACUUM/ANALYZE\" command",
-							 NULL, &su_vacuum_analyze_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_vacuum_analyze_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 
 	DefineCustomStringVariable("edb_block_commands.su_edbldr_command_whitelist",
 							 "Allows a list of super users to execute edbldr command",
-							 NULL, &su_edbldr_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_edbldr_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_delete_command_whitelist",
 							 "Allows a list of super users to execute DELETE command",
-							 NULL, &su_delete_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_delete_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 
 	DefineCustomStringVariable("edb_block_commands.su_insert_command_whitelist",
 							 "Allows a list of super users to execute INSERT command",
-							 NULL, &su_insert_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_insert_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_update_command_whitelist",
 							 "Allows a list of super users to execute UPDATE command",
-							 NULL, &su_update_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_update_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_read_whitelist",
 							 "Allows a list of super users to execute SELECT command",
-							 NULL, &su_read_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_read_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_write_whitelist",
 							 "Allows a list of super users to execute DML command",
-							 NULL, &su_write_wlist, WHITELIST_WILDCARD, PGC_SIGHUP,
+							 NULL, &su_write_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
 
 
