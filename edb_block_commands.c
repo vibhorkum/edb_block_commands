@@ -406,7 +406,8 @@ edb_check_query(ParseState *pstate, Query *query)
 			break;
 		
 		case CMD_SELECT:
-			if ((disallow_select) && !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_read_wlist)))
+			if ((disallow_select) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+							|| edb_check_su_whitelist(GetUserId(),su_read_wlist)))
 				ereport(ERROR,
 						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
 			 			errmsg("SELECT statement is not allowed by edb_block_commands configuration")));
