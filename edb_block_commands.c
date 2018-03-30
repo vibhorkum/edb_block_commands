@@ -378,47 +378,49 @@ edb_check_query(ParseState *pstate, Query *query)
 	 * Check if commandType is allowed command type 
 	 * and according disallow or allow
 	 */
-
-	switch(query->commandType)
+	if (superuser())
 	{
-		case CMD_DELETE:
-			if ((disallow_delete || disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+		switch(query->commandType)
+		{
+			case CMD_DELETE:
+				if ((disallow_delete || disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
 									|| edb_check_su_whitelist(GetUserId(), su_delete_wlist)))
-			ereport(ERROR,
-					(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-			 		 errmsg("DELETE statement is not allowed by edb_block_commands configuration")));
-			break;
+				ereport(ERROR,
+						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+			 		 	errmsg("DELETE statement is not allowed by edb_block_commands configuration")));
+				break;
 
-		case CMD_UPDATE:
-			if ((disallow_update ||disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+			case CMD_UPDATE:
+				if ((disallow_update ||disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
                                                                         || edb_check_su_whitelist(GetUserId(), su_update_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-			 			 errmsg("UPDATE statement is not allowed by edb_block_commands configuration")));
-			break;
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+			 				 errmsg("UPDATE statement is not allowed by edb_block_commands configuration")));
+				break;
 
-		case CMD_INSERT:
-			if ((disallow_insert || disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+			case CMD_INSERT:
+				if ((disallow_insert || disallow_write) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
                                                                         || edb_check_su_whitelist(GetUserId(), su_insert_wlist))) 
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-			 			errmsg("INSERT statement is not allowed by edb_block_commands configuration")));
-			break;
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+			 				errmsg("INSERT statement is not allowed by edb_block_commands configuration")));
+				break;
 		
-		case CMD_SELECT:
-			if ((disallow_select) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
-							|| edb_check_su_whitelist(GetUserId(),su_read_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-			 			errmsg("SELECT statement is not allowed by edb_block_commands configuration")));
+			case CMD_SELECT:
+				if ((disallow_select) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+									|| edb_check_su_whitelist(GetUserId(),su_read_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+			 				errmsg("SELECT statement is not allowed by edb_block_commands configuration")));
 
-		default:
-			if ((disallow_write && (query->hasModifyingCTE || query->hasForUpdate)) &&
-				!(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(), su_write_wlist)))
-                		ereport(ERROR,
-                        			(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-                         			errmsg("Write statement is not allowed by edb_block_commands configuration")));
-			break;
+			default:
+				if ((disallow_write && (query->hasModifyingCTE || query->hasForUpdate)) &&
+					!(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(), su_write_wlist)))
+                			ereport(ERROR,
+                        				(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+                         				errmsg("Write statement is not allowed by edb_block_commands configuration")));
+				break;
+		}
 	}
 
 	/*
@@ -452,77 +454,89 @@ edb_block_commands(Node *parsetree,
 		  char *completionTag)
 #endif
 {
+	if(superuser())
+	{
 #ifdef HAS_PSTMT
-	Node	   *parsetree = pstmt->utilityStmt;
+		Node	   *parsetree = pstmt->utilityStmt;
 #endif
 	/*
 	 * allow only EDB* Loader command utility command
 	 */
-	switch (nodeTag(parsetree))
-	{
-		case T_AlterSystemStmt:
-			if ((disallow_alter_system) && !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_alter_system_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						 errmsg("ALTER SYSTEM blocked by edb_block_commands configuration")));
-			break;
+		switch (nodeTag(parsetree))
+		{
+			case T_AlterSystemStmt:
+				if ((disallow_alter_system) && !(edb_check_su_whitelist(GetUserId(), su_wlist)
+							|| edb_check_su_whitelist(GetUserId(),su_alter_system_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							 errmsg("ALTER SYSTEM blocked by edb_block_commands configuration")));
+				break;
 
-		case T_EDBLoaderStmt:
-                         if ((disallow_edbldr) && !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_edbldr_wlist)))
-                         	ereport(ERROR,
-                                		(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-                                                 errmsg("EDB*loader blocked by edb_block_commands configuration")));
-                         break;
+			case T_EDBLoaderStmt:
+                        	 if ((disallow_edbldr) && !(edb_check_su_whitelist(GetUserId(), su_wlist) 
+							|| edb_check_su_whitelist(GetUserId(),su_edbldr_wlist)))
+                         		ereport(ERROR,
+                                			(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+                                                	 errmsg("EDB*loader blocked by edb_block_commands configuration")));
+                        	 break;
 
-		case T_CopyStmt:
-			if ((((CopyStmt *) parsetree)->is_program && disallow_copy_program) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_copy_program_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						 errmsg("COPY PROGRAM blocked by edb_block_commands configuration")));
-			else if ((disallow_copy_command) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_copy_command_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						 errmsg("COPY command blocked by edb_block_commands configuration")));
+			case T_CopyStmt:
+				if ((((CopyStmt *) parsetree)->is_program && disallow_copy_program) &&  
+					!(edb_check_su_whitelist(GetUserId(), su_wlist)
+						|| edb_check_su_whitelist(GetUserId(),su_copy_program_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							 errmsg("COPY PROGRAM blocked by edb_block_commands configuration")));
+				else if ((disallow_copy_command) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) 
+						|| edb_check_su_whitelist(GetUserId(),su_copy_command_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							 errmsg("COPY command blocked by edb_block_commands configuration")));
 
-			break;
+				break;
 
-		case T_VariableSetStmt:
-			if (((strcmp(((VariableSetStmt *) parsetree)->name,
-				 "log_statement") == 0) &&
-				disallow_log_statement) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_log_statement_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						 errmsg("\"SET log_statement\" blocked by edb_block_commands configuration")));
-			else if ((disallow_set_statement) && (!edb_check_su_whitelist(GetUserId(), su_wlist) || !edb_check_su_whitelist(GetUserId(),su_set_wlist))) 
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						 errmsg("\"SET variables\" blocked by edb_block_commands configuration")));
-			break;
+			case T_VariableSetStmt:
+				if (((strcmp(((VariableSetStmt *) parsetree)->name,
+				 	"log_statement") == 0) &&
+					disallow_log_statement) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) 
+						|| edb_check_su_whitelist(GetUserId(),su_log_statement_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							 errmsg("\"SET log_statement\" blocked by edb_block_commands configuration")));
+				else if ((disallow_set_statement) && (!edb_check_su_whitelist(GetUserId(), su_wlist) 
+						|| !edb_check_su_whitelist(GetUserId(),su_set_wlist))) 
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							 errmsg("\"SET variables\" blocked by edb_block_commands configuration")));
+				break;
 
-		case T_VariableShowStmt:
-			if ((disallow_show_command) && !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_show_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						errmsg("\"SHOW variables\" commands are blocked edb_block_commands configuration")));
-			break;
+			case T_VariableShowStmt:
+				if ((disallow_show_command) && !(edb_check_su_whitelist(GetUserId(), su_wlist) 
+					|| edb_check_su_whitelist(GetUserId(),su_show_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							errmsg("\"SHOW variables\" commands are blocked edb_block_commands configuration")));
+				break;
 
-		case T_VacuumStmt:
-			if ((disallow_vacuum_analyze) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist) || edb_check_su_whitelist(GetUserId(),su_vacuum_analyze_wlist)))
-                                ereport(ERROR,
-                                                (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-                                                errmsg("\"VACUUM/ANALYZE\" commands are blocked edb_block_commands configuration")));
-                        break;
+			case T_VacuumStmt:
+				if ((disallow_vacuum_analyze) &&  !(edb_check_su_whitelist(GetUserId(), su_wlist)
+					|| edb_check_su_whitelist(GetUserId(),su_vacuum_analyze_wlist)))
+                                	ereport(ERROR,
+                                        	        (errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+                                                	errmsg("\"VACUUM/ANALYZE\" commands are blocked edb_block_commands configuration")));
+                        	break;
 
-		default:
-			if (!(edb_check_su_whitelist(GetUserId(), su_wlist)))
-				ereport(ERROR,
-						(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
-						errmsg("Utility commands are blocked edb_block_commands"),
-						errhint("Allowed control commands using edb_block_commands are: ALTER SYSTEM/LOAD DATA/SET/VACUUM/ANALYZE/SHOW")));
+			default:
+				if (!(edb_check_su_whitelist(GetUserId(), su_wlist)))
+					ereport(ERROR,
+							(errcode(ERRCODE_INSUFFICIENT_PRIVILEGE),
+							errmsg("Utility commands are blocked edb_block_commands"),
+							errhint("Allowed control commands using edb_block_commands are:"
+									"ALTER SYSTEM/LOAD DATA/SET/VACUUM/ANALYZE/SHOW")));
 
-			break;
+				break;
+		}
 	}
-
 	/*
 	 * Fallback to normal process, be it the previous hook loaded
 	 * or the in-core code path if the previous hook does not exist.
@@ -552,71 +566,6 @@ edb_block_commands(Node *parsetree,
 void
 _PG_init(void)
 {
-        
-	DefineCustomBoolVariable("edb_block_commands.block_alter_system",
-							 "Block ALTER SYSTEM commands",
-							 NULL, &disallow_alter_system, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.copy_program",
-							 "Blocks COPY PROGRAM commands",
-							 NULL, &disallow_copy_program, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.copy_command",
-							 "Blocks all COPY commands",
-							 NULL, &disallow_copy_command, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.log_statement",
-							 "Blocks \"SET log_statement\" commands",
-							 NULL, &disallow_log_statement, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.set_statement",
-							 "Blocks all \"SET \" commands",
-							 NULL, &disallow_set_statement, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.edbldr",
-							 "Blocks \"edbldr\" commands",
-							 NULL, &disallow_edbldr, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.show",
-							 "Blocks \"SHOW\" commands",
-							 NULL, &disallow_show_command, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.vacuum_analyze",
-							 "Blocks \"VACUUM/ANALYZE\" commands",
-							 NULL, &disallow_vacuum_analyze, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.insert",
-							 "Blocks \"INSERT\" commands",
-							 NULL, &disallow_insert, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.update",
-							 "Blocks \"UPDATE\" commands",
-							 NULL, &disallow_update, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.delete",
-							 "Blocks \"DELETE\" commands",
-							 NULL, &disallow_delete, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.write",
-							 "Blocks \"WRITE DML\" commands",
-							 NULL, &disallow_write, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
-
-	DefineCustomBoolVariable("edb_block_commands.read",
-							 "Blocks \"SELECT\" commands",
-							 NULL, &disallow_select, true, PGC_SIGHUP,
-							 0, NULL, NULL, NULL);
 
 	DefineCustomStringVariable("edb_block_commands.su_whitelist",
 							 "Allows a list of users to use edb_block_commands for superuser escalation",
@@ -689,7 +638,6 @@ _PG_init(void)
 							 "Allows a list of super users to execute DML command",
 							 NULL, &su_write_wlist, "", PGC_SIGHUP,
 							 0, NULL, NULL, NULL);
-
 
 	prev_utility_hook = ProcessUtility_hook;
 	ProcessUtility_hook = edb_block_commands;
