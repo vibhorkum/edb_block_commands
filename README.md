@@ -22,7 +22,8 @@ This extension comes with following GUC for whitelist:
 * edb_block_commands.su_write_whitelist
 
 If user wants to allow specific commands for super user then he/she can list the name of super user in above mentioned GUC.
-Names listed in su_whitelist will allow super user to execute any commands.
+Add a comma-separated list of users to grant whitelist privileges.
+Names listed in `su_whitelist will` allow super user to execute any commands.
 
 This extension also comes with following functions to switch to super user:
 1. edb_switch_user(TEXT): Switch the role of a super user to specific super user or whitelist user.
